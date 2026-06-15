@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>KAS UDINTOGEL</title>
+
+<style>
+body{
+    font-family:Arial,sans-serif;
+    background:#f5f7fb;
+    margin:20px;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+}
+
+.card{
+    background:#fff;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,.1);
+    margin-bottom:20px;
+}
+
+input,select,button{
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    border:1px solid #ddd;
+    border-radius:6px;
+}
+
+button{
+    background:#28a745;
+    color:white;
+    border:none;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#218838;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+}
+
+.stat{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    text-align:center;
+    box-shadow:0 0 10px rgba(0,0,0,.1);
+}
+
+.table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.table th,
+.table td{
+    padding:12px;
+    border:1px solid #ddd;
+}
+
+.pemasukan{
+    color:green;
+    font-weight:bold;
+}
+
+.pengeluaran{
+    color:red;
+    font-weight:bold;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>💰 DASHBOARD KAS UDINTOGEL</h1>
+
+<div class="stats">
+    <div class="stat">
+        <h3>Total Pemasukan</h3>
+        <h2 id="totalMasuk">Rp 0</h2>
+    </div>
+
+    <div class="stat">
+        <h3>Total Pengeluaran</h3>
+        <h2 id="totalKeluar">Rp 0</h2>
+    </div>
+
+    <div class="stat">
+        <h3>Saldo Kas</h3>
+        <h2 id="saldoKas">Rp 0</h2>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Tambah Data Kas</h3>
+
+    <input type="text" id="namaStaf" placeholder="Nama Staf">
+
+    <select id="jenis">
+        <option value="Pemasukan">Pemasukan</option>
+        <option value="Pengeluaran">Pengeluaran</option>
+    </select>
+
+    <input type="number" id="nominal" placeholder="Nominal">
+
+    <input type="text" id="keterangan" placeholder="Keterangan">
+
+    <input type="text" id="invoice" placeholder="Link Invoice / Google Drive">
+
+    <button id="btnSimpan" onclick="simpanData()">Simpan Data</button>
+</div>
+
+<div class="card">
+    <h3>Riwayat Transaksi</h3>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Tanggal</th>
+                <th>Nama Staf</th>
+                <th>Jenis</th>
+                <th>Nominal</th>
+                <th>Keterangan</th>
+                <th>Invoice</th>
+            </tr>
+        </thead>
+        <tbody id="dataKas"></tbody>
+    </table>
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+getDocs,
+query,
+orderBy
+}
+from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+import {
+getStorage,
+ref,
+uploadBytes,
+getDownloadURL
+}
+from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDoRgzQ1TJe49CxO1yarDYiOFj6A1DQj8",
+  authDomain: "kas-udintogel.firebaseapp.com",
+  projectId: "kas-udintogel",
+  storageBucket: "kas-udintogel.appspot.com",
+  messagingSenderId: "1001445893268",
+  appId: "1:1001445893268:web:ff8d7758f17dc019024081"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+window.simpanData = async function(){
+
+const btn = document.getElementById("btnSimpan");
+
+btn.disabled = true;
+btn.innerHTML = "Menyimpan...";
+
+let namaStaf = document.getElementById("namaStaf").value;
+let jenis = document.getElementById("jenis").value;
+let nominal = Number(document.getElementById("nominal").value);
+let keterangan = document.getElementById("keterangan").value;
+
+let invoiceUrl = document.getElementById("invoice").value;
+
+await addDoc(collection(db,"kas"),{
+namaStaf,
+jenis,
+nominal,
+keterangan,
+invoice: invoiceUrl,
+tanggal: new Date().toLocaleDateString("id-ID")
+});
+
+alert("Data berhasil disimpan");
+
+loadData();
+
+btn.disabled = false;
+btn.innerHTML = "Simpan Data";
+
+}
+
+async function loadData(){
+
+let totalMasuk = 0;
+let totalKeluar = 0;
+
+const q = query(collection(db,"kas"));
+
+const snapshot = await getDocs(q);
+
+let html = "";
+
+snapshot.forEach(doc=>{
+
+let data = doc.data();
+
+if(data.jenis === "Pemasukan"){
+totalMasuk += data.nominal;
+}else{
+totalKeluar += data.nominal;
+}
+
+html += `
+<tr>
+<td>${data.tanggal}</td>
+<td>${data.namaStaf}</td>
+<td>${data.jenis}</td>
+<td>Rp ${data.nominal.toLocaleString()}</td>
+<td>${data.keterangan}</td>
+<td>
+${data.invoice
+? `<a href="${data.invoice}" target="_blank">Lihat</a>`
+: '-'}
+</td>
+</tr>
+`;
+
+});
+
+document.getElementById("dataKas").innerHTML = html;
+
+document.getElementById("totalMasuk").innerHTML =
+"Rp " + totalMasuk.toLocaleString();
+
+document.getElementById("totalKeluar").innerHTML =
+"Rp " + totalKeluar.toLocaleString();
+
+document.getElementById("saldoKas").innerHTML =
+"Rp " + (totalMasuk-totalKeluar).toLocaleString();
+
+}
+
+loadData();
+
+</script>
+
+</body>
+</html>
