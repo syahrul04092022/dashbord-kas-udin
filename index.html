@@ -18,6 +18,23 @@ body{
     margin:auto;
 }
 
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+#btnLogin{
+    width:auto;
+    padding:10px 15px;
+    background:#28a745;
+    color:white;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+
 h1{
     text-align:center;
 }
@@ -88,9 +105,19 @@ button:hover{
 <body>
 
 <div class="container">
+<div class="header">
 
 <h1>💰 DASHBOARD KAS UDINTOGEL</h1>
 
+<div id="userArea">
+
+<button id="btnLogin" onclick="loginAdmin()">
+🔐 Login Admin
+</button>
+
+</div>
+
+</div>
 <div class="stats">
     <div class="stat">
         <h3>Total Pemasukan</h3>
@@ -152,6 +179,22 @@ button:hover{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 
 import {
+getStorage,
+ref,
+uploadBytes,
+getDownloadURL
+}
+from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+import {
+getAuth,
+signInWithEmailAndPassword,
+signOut,
+onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+import {
 getFirestore,
 collection,
 addDoc,
@@ -161,27 +204,21 @@ orderBy
 }
 from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-import {
-getStorage,
-ref,
-uploadBytes,
-getDownloadURL
-}
-from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyDoRgzQ1TJe49CxO1yarDYiOFj6A1DQj8",
   authDomain: "kas-udintogel.firebaseapp.com",
   projectId: "kas-udintogel",
-  storageBucket: "kas-udintogel.appspot.com",
+  storageBucket: "kas-udintogel.firebasestorage.app",
   messagingSenderId: "1001445893268",
   appId: "1:1001445893268:web:ff8d7758f17dc019024081"
 };
 
 const app = initializeApp(firebaseConfig);
+console.log(firebaseConfig);
 
 const db = getFirestore(app);
 const storage = getStorage(app);
+const auth = getAuth(app);
 
 window.simpanData = async function(){
 
@@ -267,6 +304,34 @@ document.getElementById("saldoKas").innerHTML =
 }
 
 loadData();
+
+window.loginAdmin = async function(){
+
+    const email = prompt("Email Admin:");
+
+    if(!email) return;
+
+    const password = prompt("Password Admin:");
+
+    if(!password) return;
+
+    try{
+
+        await signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+        );
+
+        alert("Login Berhasil");
+
+    }catch(error){
+
+        alert(error.message);
+
+    }
+
+}
 
 </script>
 
